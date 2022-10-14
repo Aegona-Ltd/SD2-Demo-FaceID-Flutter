@@ -1,7 +1,6 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'package:faceid_example/cross_platform.dart';
-import 'package:faceid_example/custom_button.dart';
 import 'package:faceid_example/web_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -36,8 +35,6 @@ class _LoginState extends State<Login> {
     bool canAuthicationWithBiometrics = await auth.canCheckBiometrics;
     final List<BiometricType> availableBiometrics =
         await auth.getAvailableBiometrics();
-    print("init2");
-    print(availableBiometrics);
     setState(() {
       _supportState =
           isSupported ? _SupportState.supported : _SupportState.unsupported;
@@ -48,6 +45,41 @@ class _LoginState extends State<Login> {
           availableBiometrics.contains(BiometricType.weak);
       isInit = false;
     });
+  }
+
+  Future<void> _authenticate() async {
+    bool authenticated = false;
+    try {
+      setState(() {
+        _isAuthenticating = true;
+        _authorized = 'Authenticating';
+      });
+      authenticated = await auth.authenticate(
+        localizedReason: 'Let OS determine authentication method',
+        options:
+            const AuthenticationOptions(stickyAuth: true, biometricOnly: false),
+      );
+      if (authenticated) {
+        CrossPlatform.transitionToPage(context, const WebViewScreen());
+        // CrossPlatform.showErrorSnackbar(context, "Authentication Success");
+      }
+      setState(() {
+        _isAuthenticating = false;
+      });
+    } on PlatformException catch (e) {
+      print(e);
+      setState(() {
+        _isAuthenticating = false;
+        _authorized = 'Error - ${e.message}';
+      });
+      return;
+    }
+    if (!mounted) {
+      return;
+    }
+
+    setState(
+        () => _authorized = authenticated ? 'Authorized' : 'Not Authorized');
   }
 
   Future<void> _authenticateWithBiometrics() async {
@@ -72,7 +104,7 @@ class _LoginState extends State<Login> {
         _authorized = 'Authenticating';
       });
     } on PlatformException catch (e) {
-      print(e);
+     
       setState(() {
         _isAuthenticating = false;
         _authorized = 'Error - ${e.message}';
@@ -118,27 +150,39 @@ class _LoginState extends State<Login> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
-                        CustomButton(
-                            onTap: () {
-                              // if (!isInit && !_isAuthenticating && isFingerId) {
-                              //   _authenticateWithBiometrics();
-                              // }
-                              _authenticateWithBiometrics();
-                            },
-                            label: "FingerID",
-                            color: isFingerId
-                                ? const Color.fromRGBO(150, 30, 60, 1)
-                                : const Color.fromRGBO(150, 30, 60, 0.5)),
-                        CustomButton(
-                            onTap: () {
-                              if (isFaceId && !isInit && !_isAuthenticating) {
-                                _authenticateWithBiometrics();
-                              }
-                            },
-                            label: "FaceID",
-                            color: isFaceId
-                                ? const Color.fromRGBO(150, 30, 60, 1)
-                                : const Color.fromRGBO(150, 30, 60, 0.5))
+                        // CustomButton(
+                        //     onTap: () {
+                        //       // if (!isInit && !_isAuthenticating && isFingerId) {
+                        //       //   _authenticateWithBiometrics();
+                        //       // }
+                        //       _authenticate();
+                        //     },
+                        //     label: "PIN",
+                        //     color: const Color.fromRGBO(150, 30, 60, 1)),
+                        // CustomButton(
+                        //     onTap: () {
+                        //       if (isFaceId && !isInit && !_isAuthenticating) {
+                        //         _authenticateWithBiometrics();
+                        //       }
+                        //     },
+                        //     label: "Biometrics",
+                        //     color: isFaceId || isFingerId
+                        //         ? const Color.fromRGBO(150, 30, 60, 1)
+                        //         : const Color.fromRGBO(150, 30, 60, 0.5)),
+                        InkWell(
+                          onTap: () {
+                            _authenticateWithBiometrics();
+                          },
+                          child: const CircleAvatar(
+                            radius: 26,
+                            backgroundColor: Color.fromRGBO(150, 30, 60, 1),
+                            child: Icon(
+                              Icons.fingerprint_outlined,
+                              size: 34,
+                              color: Colors.white,
+                            ),
+                          ),
+                        )
                       ],
                     ),
                     Padding(

@@ -1,4 +1,4 @@
-import 'dart:async';
+
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -23,7 +23,17 @@ class _WebViewScreenState extends State<WebViewScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: WebView(
+      appBar: AppBar(
+        title: const Text(
+          "Aegona Web",
+          style: TextStyle(color: Colors.white),
+        ),
+        iconTheme: const IconThemeData(color: Colors.white),
+        centerTitle: true,
+        foregroundColor: const Color.fromRGBO(150, 30, 60, 1),
+        backgroundColor: const Color.fromRGBO(150, 30, 60, 1),
+      ),
+      body: const WebView(
         initialUrl: "https://www.aegona.com",
       ),
     );
